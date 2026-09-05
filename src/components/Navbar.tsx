@@ -4,6 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import {
+  LayoutDashboard,
+  CheckSquare2,
+  Sun,
+  Moon,
+  LogOut,
+  User,
+} from "lucide-react";
 
 interface NavbarProps {
   onToggleDarkMode?: () => void;
@@ -29,86 +37,74 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
   }
 
   const links = [
-    { href: "/", label: "Dashboard" },
-    { href: "/tasks", label: "Tasks" },
+    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/tasks", label: "Habits", icon: CheckSquare2 },
   ];
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-[var(--foreground)]/8 bg-[var(--background)]/80 backdrop-blur-xl">
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-6">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-bold text-[var(--foreground)] shrink-0"
-        >
-          <span className="text-lg">🔥</span>
-          <span className="hidden sm:inline">Habit Tracker</span>
-        </Link>
-
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-colors">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Nav links */}
-        <div className="flex gap-1">
-          {links.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                pathname === href
-                  ? "bg-[var(--foreground)]/[0.06] text-[var(--foreground)]"
-                  : "text-[var(--foreground)]/50 hover:text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/[0.03]"
-              }`}
+        <nav className="flex items-center gap-1">
+            {links.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 ${
+                    isActive
+                      ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 shadow-sm"
+                      : "text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-emerald-500 stroke-[2.2]" : "text-zinc-400"}`} />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+        {/* Right side controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Dark Mode Toggle */}
+          {onToggleDarkMode && (
+            <button
+              onClick={onToggleDarkMode}
+              className="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors cursor-pointer border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label="Toggle dark mode"
             >
-              {label}
-            </Link>
-          ))}
-        </div>
+              {isDark ? (
+                <Sun className="w-4 h-4 transition-transform rotate-0 scale-100 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 transition-transform rotate-0 scale-100 text-zinc-600" />
+              )}
+            </button>
+          )}
 
-        <div className="flex-1" />
+          <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-800" />
 
-        {/* Dark mode toggle */}
-        {onToggleDarkMode && (
-          <button
-            onClick={onToggleDarkMode}
-            className="p-2 rounded-lg hover:bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/50 hover:text-[var(--foreground)] transition-colors cursor-pointer"
-            title="Toggle dark mode"
-          >
-            {isDark ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
-        )}
+          {/* User profile & sign out */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-100/80 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 max-w-[170px] sm:max-w-[220px]">
+              <div className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                <User className="w-2.5 h-2.5" />
+              </div>
+              <span className="truncate">{email || "Account"}</span>
+            </div>
 
-        {/* User email + sign out */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--foreground)]/40 hidden sm:inline truncate max-w-[160px]">
-            {email}
-          </span>
-          <button
-            onClick={handleSignOut}
-            className="p-2 rounded-lg hover:bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/50 hover:text-[var(--foreground)] transition-colors cursor-pointer"
-            title="Sign out"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              onClick={handleSignOut}
+              className="p-2 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+              title="Sign out"
+              aria-label="Sign out"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-          </button>
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

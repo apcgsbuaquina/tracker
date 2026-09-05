@@ -2,6 +2,17 @@
 
 import { useState } from "react";
 import type { Task } from "@/lib/types";
+import TaskIcon from "@/components/TaskIcon";
+import {
+  Pencil,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  AlertCircle,
+  FolderArchive,
+  ChevronRight,
+  ListTodo,
+} from "lucide-react";
 
 interface TaskListProps {
   tasks: Task[];
@@ -27,119 +38,99 @@ export default function TaskList({
 
     return (
       <div
-        className={`group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
+        className={`group relative flex items-center justify-between gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200 ${
           task.is_archived
-            ? "border-[var(--foreground)]/5 opacity-60"
-            : "border-[var(--foreground)]/8 hover:border-[var(--foreground)]/15 hover:shadow-md hover:shadow-black/5"
+            ? "border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 opacity-70"
+            : "border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/70 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm"
         }`}
       >
-        {/* Color dot + emoji */}
-        <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0"
-          style={{ backgroundColor: task.color + "20" }}
-        >
-          {task.emoji || (
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: task.color }}
-            />
-          )}
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* Icon Badge */}
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs transition-transform group-hover:scale-105"
+            style={{
+              backgroundColor: `${task.color}15`,
+              color: task.color,
+              border: `1px solid ${task.color}30`,
+            }}
+          >
+            <TaskIcon name={task.emoji} className="w-5 h-5" />
+          </div>
+
+          {/* Title & Metadata */}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+              {task.name}
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: task.color }}
+              />
+              <span className="text-xs text-zinc-600 dark:text-zinc-400 capitalize">
+                {task.is_archived ? "Archived" : "Active Tracking"}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Name */}
-        <span className="flex-1 font-medium text-[var(--foreground)] truncate">
-          {task.name}
-        </span>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => onEdit(task)}
-            className="p-2 rounded-lg hover:bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/50 hover:text-[var(--foreground)] transition-colors cursor-pointer"
-            title="Edit"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              />
-            </svg>
-          </button>
-
-          <button
-            onClick={() => onArchive(task)}
-            className="p-2 rounded-lg hover:bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/50 hover:text-[var(--foreground)] transition-colors cursor-pointer"
-            title={task.is_archived ? "Unarchive" : "Archive"}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {task.is_archived ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                />
-              )}
-            </svg>
-          </button>
-
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1 shrink-0">
           {isConfirming ? (
-            <div className="flex items-center gap-1 ml-1">
+            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 animate-in fade-in duration-150">
+              <AlertCircle className="w-3.5 h-3.5 text-rose-500 ml-1" />
+              <span className="text-xs font-medium text-rose-700 dark:text-rose-400">
+                Delete?
+              </span>
               <button
                 onClick={() => {
                   onDelete(task);
                   setConfirmDeleteId(null);
                 }}
-                className="px-2 py-1 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                className="px-2 py-1 text-xs font-semibold rounded-md bg-rose-500 hover:bg-rose-600 text-white transition-colors cursor-pointer"
               >
-                Confirm
+                Yes
               </button>
               <button
                 onClick={() => setConfirmDeleteId(null)}
-                className="px-2 py-1 text-xs font-medium rounded-lg hover:bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/50 transition-colors cursor-pointer"
+                className="px-2 py-1 text-xs font-medium rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                Cancel
+                No
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => setConfirmDeleteId(task.id)}
-              className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--foreground)]/50 hover:text-red-400 transition-colors cursor-pointer"
-              title="Delete"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <>
+              <button
+                onClick={() => onEdit(task)}
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Edit Habit"
+                aria-label="Edit"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </button>
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => onArchive(task)}
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                title={task.is_archived ? "Restore Habit" : "Archive Habit"}
+                aria-label={task.is_archived ? "Restore" : "Archive"}
+              >
+                {task.is_archived ? (
+                  <ArchiveRestore className="w-3.5 h-3.5" />
+                ) : (
+                  <Archive className="w-3.5 h-3.5" />
+                )}
+              </button>
+
+              <button
+                onClick={() => setConfirmDeleteId(task.id)}
+                className="p-2 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                title="Delete Habit"
+                aria-label="Delete"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -147,43 +138,48 @@ export default function TaskList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {active.length === 0 && (
-        <p className="text-center text-[var(--foreground)]/40 py-8">
-          No tasks yet. Create one to get started.
-        </p>
+        <div className="text-center py-14 px-4 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mb-3">
+            <ListTodo className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            No active habits yet
+          </h3>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+            Create your first habit above to track your daily progress on the contribution heatmap.
+          </p>
+        </div>
       )}
 
-      {active.map((t) => (
-        <TaskCard key={t.id} task={t} />
-      ))}
+      {/* Active Habits List */}
+      <div className="space-y-2.5">
+        {active.map((t) => (
+          <TaskCard key={t.id} task={t} />
+        ))}
+      </div>
 
+      {/* Archived Habits Section */}
       {archived.length > 0 && (
-        <div className="pt-4">
+        <div className="pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
           <button
             onClick={() => setShowArchived(!showArchived)}
-            className="text-sm text-[var(--foreground)]/50 hover:text-[var(--foreground)]/70 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
           >
-            <svg
-              className={`w-3.5 h-3.5 transition-transform ${
+            <ChevronRight
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
                 showArchived ? "rotate-90" : ""
               }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-            {archived.length} archived task{archived.length > 1 ? "s" : ""}
+            />
+            <FolderArchive className="w-3.5 h-3.5" />
+            <span>
+              {archived.length} Archived Habit{archived.length > 1 ? "s" : ""}
+            </span>
           </button>
 
           {showArchived && (
-            <div className="space-y-2 mt-3">
+            <div className="space-y-2.5 mt-3 animate-in fade-in duration-150">
               {archived.map((t) => (
                 <TaskCard key={t.id} task={t} />
               ))}

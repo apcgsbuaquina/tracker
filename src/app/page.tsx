@@ -3,11 +3,24 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Task, EntryWithTask, DayData, TaskBreakdown } from "@/lib/types";
-import { formatDate, calculateStreak } from "@/lib/utils";
+import {
+  formatDate,
+  calculateStreak,
+  type Thresholds,
+  DEFAULT_THRESHOLDS,
+} from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import Heatmap from "@/components/Heatmap";
 import StatsBar from "@/components/StatsBar";
 import DayEntryModal from "@/components/DayEntryModal";
+import ThresholdsModal from "@/components/ThresholdsModal";
+import {
+  Download,
+  Plus,
+  Filter,
+  Command,
+  Sliders,
+} from "lucide-react";
 
 export default function DashboardPage() {
   const supabase = createClient();
@@ -17,19 +30,21 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filterTaskId, setFilterTaskId] = useState<string>("all");
   const [isDark, setIsDark] = useState(false);
+  const [showThresholdsModal, setShowThresholdsModal] = useState(false);
+  const [thresholdsMap, setThresholdsMap] = useState<Record<string, Thresholds>>({
+    all: DEFAULT_THRESHOLDS,
+  });
 
   // Date range: ~12 months back from today
   const endDate = useMemo(() => new Date(), []);
   const startDate = useMemo(() => {
     const d = new Date(endDate);
     d.setFullYear(d.getFullYear() - 1);
-    // Align to Monday
     const dow = (d.getDay() + 6) % 7;
     d.setDate(d.getDate() - dow);
     return d;
   }, [endDate]);
 
-  // Dark mode: check system preference on mount, persist manual toggle
   useEffect(() => {
     const stored = localStorage.getItem("theme");
     if (stored) {
@@ -37,24 +52,39 @@ export default function DashboardPage() {
     } else {
       setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
     }
-  }, []);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-    if (isDark) {
-      document.documentElement.style.setProperty("--background", "#0a0a0a");
-      document.documentElement.style.setProperty("--foreground", "#ededed");
-    } else {
-      document.documentElement.style.setProperty("--background", "#ffffff");
-      document.documentElement.style.setProperty("--foreground", "#171717");
+    const storedThresholds = localStorage.getItem("tracker_thresholds");
+    if (storedThresholds) {
+      try {
+        setThresholdsMap(JSON.parse(storedThresholds));
+      } catch {
+        // use default
+      }
     }
-  }, [isDark]);
+  }, []);
 
   function toggleDarkMode() {
     const next = !isDark;
     setIsDark(next);
     localStorage.setItem("theme", next ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", next);
   }
+
+  function handleSaveThresholds(taskId: string, newThresholds: Thresholds) {
+    setThresholdsMap((prev) => {
+      const updated = { ...prev, [taskId]: newThresholds };
+      localStorage.setItem("tracker_thresholds", JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  const activeThresholds: Thresholds = useMemo(() => {
+    return (
+      thresholdsMap[filterTaskId] ||
+      thresholdsMap["all"] ||
+      DEFAULT_THRESHOLDS
+    );
+  }, [thresholdsMap, filterTaskId]);
 
   const fetchData = useCallback(async () => {
     const startStr = formatDate(startDate);
@@ -90,7 +120,7 @@ export default function DashboardPage() {
   // Keyboard shortcut: Ctrl+L / Cmd+L to open today's entry modal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "l") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
         e.preventDefault();
         setSelectedDate(formatDate(new Date()));
       }
@@ -99,7 +129,7 @@ export default function DashboardPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Build heatmap data: group entries by date
+  // Build heatmap data
   const dayMap = useMemo(() => {
     const map = new Map<string, DayData>();
 
@@ -113,8 +143,8 @@ export default function DashboardPage() {
       const meta = Array.isArray(entry.tasks) ? entry.tasks[0] : entry.tasks;
       const breakdown: TaskBreakdown = {
         taskId: entry.task_id,
-        name: meta?.name ?? "Unknown task",
-        color: meta?.color ?? "#22c55e",
+        name: meta?.name ?? "Habit",
+        color: meta?.color ?? "#10b981",
         emoji: meta?.emoji ?? null,
         hours: Number(entry.hours),
         note: entry.note,
@@ -153,11 +183,11 @@ export default function DashboardPage() {
     return { streak, totalHours, daysLogged, avgHoursPerDay };
   }, [dayMap]);
 
-  // Determine the heatmap color: use the filtered task's color, or default green
+  // Determine heatmap active color
   const heatmapColor = useMemo(() => {
-    if (filterTaskId === "all") return "#22c55e";
+    if (filterTaskId === "all") return "#10b981";
     const task = tasks.find((t) => t.id === filterTaskId);
-    return task?.color ?? "#22c55e";
+    return task?.color ?? "#10b981";
   }, [filterTaskId, tasks]);
 
   // CSV export
@@ -167,12 +197,12 @@ export default function DashboardPage() {
         ? entries
         : entries.filter((e) => e.task_id === filterTaskId);
 
-    const rows = [["Date", "Task", "Hours", "Note"]];
+    const rows = [["Date", "Habit", "Hours", "Note"]];
     for (const e of filtered) {
       const meta = Array.isArray(e.tasks) ? e.tasks[0] : e.tasks;
       rows.push([
         e.entry_date,
-        meta?.name ?? "Unknown task",
+        meta?.name ?? "Habit",
         String(e.hours),
         e.note ?? "",
       ]);
@@ -183,7 +213,7 @@ export default function DashboardPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `habit-tracker-export-${formatDate(new Date())}.csv`;
+    a.download = `habit-pulse-export-${formatDate(new Date())}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -191,63 +221,81 @@ export default function DashboardPage() {
   const activeTasks = tasks.filter((t) => !t.is_archived);
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        {/* Header row */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <h1 className="text-xl font-bold text-[var(--foreground)]">
-            Dashboard
-          </h1>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
+        {/* Top Control Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Overview
+            </h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Annual consistency grid and habit performance metrics.
+            </p>
+          </div>
 
-          <div className="flex items-center gap-2 sm:ml-auto">
-            {/* Task filter */}
-            <select
-              value={filterTaskId}
-              onChange={(e) => setFilterTaskId(e.target.value)}
-              className="px-3 py-2 text-sm rounded-xl border border-[var(--foreground)]/10 bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer"
-            >
-              <option value="all">All tasks</option>
-              {activeTasks.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.emoji ? `${t.emoji} ` : ""}
-                  {t.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            {/* Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={filterTaskId}
+                onChange={(e) => setFilterTaskId(e.target.value)}
+                className="appearance-none pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40 cursor-pointer shadow-xs transition-colors"
+              >
+                <option value="all">All Habits Combined</option>
+                {activeTasks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+              <Filter className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            </div>
 
-            {/* CSV export */}
+            {/* Customize Scale Button */}
             <button
-              onClick={exportCsv}
-              className="px-3 py-2 text-sm rounded-xl border border-[var(--foreground)]/10 text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-[var(--foreground)]/[0.04] transition-colors cursor-pointer"
-              title="Export CSV"
+              onClick={() => setShowThresholdsModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-xs cursor-pointer"
+              title="Customize shade intensity thresholds"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <Sliders className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Color Scale</span>
             </button>
 
-            {/* Quick-add today */}
+            {/* CSV Export Button */}
+            <button
+              onClick={exportCsv}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-xs cursor-pointer"
+              title="Export CSV history"
+            >
+              <Download className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+
+            {/* Log Today Button */}
             <button
               onClick={() => setSelectedDate(formatDate(new Date()))}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 shadow-sm transition-all cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden sm:inline">Log today</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Log Today</span>
+              <span className="hidden md:inline-flex items-center ml-1 text-[10px] opacity-70 px-1 py-0.5 rounded bg-white/20 dark:bg-black/20">
+                Ctrl+L
+              </span>
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="flex flex-col items-center justify-center py-24 gap-3 text-zinc-400">
+            <div className="w-7 h-7 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+            <span className="text-xs font-medium">Synchronizing habits...</span>
           </div>
         ) : (
           <>
-            {/* Stats */}
+            {/* Stats Metrics Grid */}
             <StatsBar
               streak={stats.streak}
               totalHours={stats.totalHours}
@@ -255,21 +303,32 @@ export default function DashboardPage() {
               avgHoursPerDay={stats.avgHoursPerDay}
             />
 
-            {/* Heatmap */}
-            <div className="rounded-2xl border border-[var(--foreground)]/8 bg-[var(--foreground)]/[0.02] p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-[var(--foreground)]/50">
-                  {stats.totalHours > 0
-                    ? `${stats.totalHours.toFixed(1)} hours in the last year`
-                    : "Click a day to start logging"}
-                </p>
-                <p className="text-xs text-[var(--foreground)]/30">
-                  <kbd className="px-1.5 py-0.5 rounded border border-[var(--foreground)]/10 text-[10px]">
-                    Ctrl+L
-                  </kbd>{" "}
-                  quick-add
-                </p>
+            {/* Heatmap Card */}
+            <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: heatmapColor }}
+                  />
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                    {filterTaskId === "all"
+                      ? "Combined Activity"
+                      : activeTasks.find((t) => t.id === filterTaskId)?.name ?? "Selected Habit"}
+                  </span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    · {stats.totalHours.toFixed(1)} hrs logged
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span className="hidden sm:inline">Quick log:</span>
+                  <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[10px] font-mono">
+                    <Command className="w-2.5 h-2.5" />L
+                  </kbd>
+                </div>
               </div>
+
               <Heatmap
                 data={dayMap}
                 baseColor={heatmapColor}
@@ -277,19 +336,33 @@ export default function DashboardPage() {
                 endDate={endDate}
                 onDayClick={setSelectedDate}
                 isDark={isDark}
+                thresholds={activeThresholds}
+                onOpenThresholds={() => setShowThresholdsModal(true)}
               />
             </div>
           </>
         )}
       </main>
 
-      {/* Day entry modal */}
+      {/* Day Entry Modal (Log, Edit, Delete) */}
       {selectedDate && (
         <DayEntryModal
           date={selectedDate}
           tasks={tasks}
           onClose={() => setSelectedDate(null)}
           onSaved={fetchData}
+        />
+      )}
+
+      {/* Thresholds / Color Scale Modal */}
+      {showThresholdsModal && (
+        <ThresholdsModal
+          tasks={tasks}
+          activeTaskId={filterTaskId}
+          thresholdsMap={thresholdsMap}
+          onSave={handleSaveThresholds}
+          onClose={() => setShowThresholdsModal(false)}
+          isDark={isDark}
         />
       )}
     </div>

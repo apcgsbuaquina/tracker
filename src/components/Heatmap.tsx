@@ -10,7 +10,11 @@ import {
   DAY_LABELS,
   MONTH_LABELS,
   formatDate,
+  type Thresholds,
+  DEFAULT_THRESHOLDS,
 } from "@/lib/utils";
+import TaskIcon from "@/components/TaskIcon";
+import { Calendar, Sliders } from "lucide-react";
 
 interface HeatmapProps {
   data: Map<string, DayData>;
@@ -19,10 +23,12 @@ interface HeatmapProps {
   endDate: Date;
   onDayClick: (date: string) => void;
   isDark: boolean;
+  thresholds?: Thresholds;
+  onOpenThresholds?: () => void;
 }
 
-const CELL_SIZE = 13;
-const CELL_GAP = 3;
+const CELL_SIZE = 14;
+const CELL_GAP = 3.5;
 
 export default function Heatmap({
   data,
@@ -31,6 +37,8 @@ export default function Heatmap({
   endDate,
   onDayClick,
   isDark,
+  thresholds = DEFAULT_THRESHOLDS,
+  onOpenThresholds,
 }: HeatmapProps) {
   const [tooltip, setTooltip] = useState<{
     date: string;
@@ -39,52 +47,37 @@ export default function Heatmap({
   } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Build the grid: weeks as columns, days (Mon-Sun) as rows
-  const { weeks, monthLabels, maxValue } = useMemo(() => {
+  // Build grid: columns = weeks, rows = days (Mon = 0 ... Sun = 6)
+  const { weeks, monthLabels } = useMemo(() => {
     const allDates = generateDateRange(startDate, endDate);
 
-    // Find the max daily total for bucketing
-    let max = 0;
-    for (const d of allDates) {
-      const day = data.get(d);
-      if (day && day.totalHours > max) max = day.totalHours;
-    }
-    // Ensure max is at least 1 to avoid division by zero
-    if (max < 1) max = 1;
-
-    // Organize into weeks. Week starts on Monday.
     const weeksList: (string | null)[][] = [];
     let currentWeek: (string | null)[] = [];
 
-    // Pad the first week with nulls so it starts on Monday
     const firstDate = parseDate(allDates[0]);
-    const firstDow = (firstDate.getDay() + 6) % 7; // Mon=0
+    const firstDow = (firstDate.getDay() + 6) % 7;
     for (let i = 0; i < firstDow; i++) {
       currentWeek.push(null);
     }
 
     for (const dateStr of allDates) {
       const d = parseDate(dateStr);
-      const dow = (d.getDay() + 6) % 7; // Mon=0
+      const dow = (d.getDay() + 6) % 7;
       if (dow === 0 && currentWeek.length > 0) {
-        // Pad incomplete week
         while (currentWeek.length < 7) currentWeek.push(null);
         weeksList.push(currentWeek);
         currentWeek = [];
       }
       currentWeek.push(dateStr);
     }
-    // Push last incomplete week
     if (currentWeek.length > 0) {
       while (currentWeek.length < 7) currentWeek.push(null);
       weeksList.push(currentWeek);
     }
 
-    // Build month labels with their column positions
     const labels: { label: string; col: number }[] = [];
     let lastMonth = -1;
     for (let col = 0; col < weeksList.length; col++) {
-      // Find first non-null date in this week
       const firstInWeek = weeksList[col].find((d) => d !== null);
       if (firstInWeek) {
         const month = parseDate(firstInWeek).getMonth();
@@ -95,10 +88,9 @@ export default function Heatmap({
       }
     }
 
-    return { weeks: weeksList, monthLabels: labels, maxValue: max };
-  }, [data, startDate, endDate]);
+    return { weeks: weeksList, monthLabels: labels };
+  }, [startDate, endDate]);
 
-  // Scroll to the right (most recent) on mount
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollLeft = containerRef.current.scrollWidth;
@@ -116,36 +108,28 @@ export default function Heatmap({
     setTooltip({
       date: dateStr,
       x: rect.left - containerRect.left + rect.width / 2,
-      y: rect.top - containerRect.top - 8,
+      y: rect.top - containerRect.top - 10,
     });
   }
 
   const today = formatDate(new Date());
 
   return (
-    <div className="relative" ref={containerRef}>
-      {/* Scrollable area */}
-      <div className="overflow-x-auto pb-2">
+    <div className="relative select-none" ref={containerRef}>
+      {/* Centered Scrollable Grid Container */}
+      <div className="overflow-x-auto pb-3 pt-1 scroll-smooth flex justify-center">
         <div
-          className="inline-flex flex-col"
-          style={{
-            paddingLeft: 32, // space for day labels
-          }}
+          className="inline-flex flex-col w-max mx-auto"
+          style={{ paddingLeft: 34 }}
         >
-          {/* Month labels */}
-          <div
-            className="flex mb-1"
-            style={{
-              paddingLeft: 0,
-              height: 16,
-            }}
-          >
+          {/* Month Labels */}
+          <div className="relative h-5 mb-1.5 pointer-events-none">
             {monthLabels.map(({ label, col }, i) => (
               <span
                 key={i}
-                className="text-[10px] text-[var(--foreground)]/40 absolute"
+                className="text-[10px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 absolute"
                 style={{
-                  left: 32 + col * (CELL_SIZE + CELL_GAP),
+                  left: col * (CELL_SIZE + CELL_GAP),
                 }}
               >
                 {label}
@@ -153,17 +137,17 @@ export default function Heatmap({
             ))}
           </div>
 
-          {/* Grid */}
-          <div className="flex gap-[3px]">
-            {/* Day-of-week labels */}
+          {/* Day rows + Week columns */}
+          <div className="flex gap-[3.5px]">
+            {/* Day of week labels */}
             <div
-              className="flex flex-col gap-[3px] shrink-0"
-              style={{ marginLeft: -32, width: 28 }}
+              className="flex flex-col gap-[3.5px] shrink-0 pointer-events-none"
+              style={{ marginLeft: -34, width: 28 }}
             >
               {DAY_LABELS.map((label, i) => (
                 <div
                   key={label}
-                  className="flex items-center justify-end pr-1 text-[10px] text-[var(--foreground)]/40"
+                  className="flex items-center justify-end pr-1.5 text-[9px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400"
                   style={{
                     height: CELL_SIZE,
                     visibility: i % 2 === 0 ? "visible" : "hidden",
@@ -174,9 +158,9 @@ export default function Heatmap({
               ))}
             </div>
 
-            {/* Week columns */}
+            {/* Week Columns */}
             {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex flex-col gap-[3px]">
+              <div key={weekIdx} className="flex flex-col gap-[3.5px]">
                 {week.map((dateStr, dayIdx) => {
                   if (!dateStr) {
                     return (
@@ -192,22 +176,26 @@ export default function Heatmap({
 
                   const dayData = data.get(dateStr);
                   const value = dayData?.totalHours ?? 0;
-                  const bucket = bucketValue(value, maxValue);
+                  const bucket = bucketValue(value, thresholds);
                   const color = intensityColor(bucket, baseColor, isDark);
                   const isToday = dateStr === today;
 
                   return (
                     <div
                       key={dayIdx}
-                      className="rounded-[3px] cursor-pointer transition-all hover:scale-125 hover:z-10"
+                      className={`relative rounded-[3.5px] cursor-pointer transition-all duration-150 ${
+                        bucket === 0
+                          ? "border border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-600"
+                          : "border border-transparent hover:scale-125 hover:z-20 hover:shadow-md"
+                      } ${
+                        isToday
+                          ? "ring-2 ring-emerald-500 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
+                          : ""
+                      }`}
                       style={{
                         width: CELL_SIZE,
                         height: CELL_SIZE,
                         backgroundColor: color,
-                        outline: isToday
-                          ? `2px solid ${isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}`
-                          : "none",
-                        outlineOffset: -1,
                       }}
                       onClick={() => onDayClick(dateStr)}
                       onMouseEnter={(e) => handleMouseEnter(dateStr, e)}
@@ -221,7 +209,7 @@ export default function Heatmap({
         </div>
       </div>
 
-      {/* Tooltip */}
+      {/* Floating Tooltip */}
       {tooltip && (
         <Tooltip
           date={tooltip.date}
@@ -232,21 +220,56 @@ export default function Heatmap({
         />
       )}
 
-      {/* Legend */}
-      <div className="flex items-center justify-end gap-1.5 mt-3 text-[10px] text-[var(--foreground)]/40">
-        <span>Less</span>
-        {([0, 1, 2, 3, 4] as const).map((bucket) => (
-          <div
-            key={bucket}
-            className="rounded-[3px]"
-            style={{
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              backgroundColor: intensityColor(bucket, baseColor, isDark),
-            }}
-          />
-        ))}
-        <span>More</span>
+      {/* Footer Legend */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-zinc-600 dark:text-zinc-400">
+        <span className="text-zinc-600 dark:text-zinc-400">
+          Click on any square to view, log, edit, or delete hours
+        </span>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">0h</span>
+            {([0, 1, 2, 3, 4] as const).map((bucket) => (
+              <div
+                key={bucket}
+                className={`rounded-[3px] ${
+                  bucket === 0 ? "border border-zinc-200 dark:border-zinc-800" : ""
+                }`}
+                style={{
+                  width: 12,
+                  height: 12,
+                  backgroundColor: intensityColor(bucket, baseColor, isDark),
+                }}
+                title={
+                  bucket === 0
+                    ? "0 hours"
+                    : bucket === 1
+                    ? `< ${thresholds[0]}h`
+                    : bucket === 2
+                    ? `≥ ${thresholds[0]}h`
+                    : bucket === 3
+                    ? `≥ ${thresholds[1]}h`
+                    : `≥ ${thresholds[2]}h`
+                }
+              />
+            ))}
+            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+              {thresholds[2]}h+
+            </span>
+          </div>
+
+          {onOpenThresholds && (
+            <button
+              type="button"
+              onClick={onOpenThresholds}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-[10px] font-medium"
+              title="Customize color shade hour thresholds"
+            >
+              <Sliders className="w-2.5 h-2.5" />
+              <span>Customize Scale</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -266,7 +289,7 @@ function Tooltip({
   isDark: boolean;
 }) {
   const d = parseDate(date);
-  const formatted = d.toLocaleDateString("en-US", {
+  const formattedDate = d.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -278,44 +301,61 @@ function Tooltip({
 
   return (
     <div
-      className="absolute z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full"
+      className="absolute z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full pb-2 animate-in fade-in duration-150"
       style={{ left: x, top: y }}
     >
       <div
-        className={`rounded-xl px-3 py-2.5 text-xs shadow-xl border min-w-[160px] ${
+        className={`rounded-xl px-3.5 py-3 shadow-xl border min-w-[200px] backdrop-blur-md ${
           isDark
-            ? "bg-zinc-800 border-zinc-700 text-zinc-200"
-            : "bg-white border-gray-200 text-gray-800"
+            ? "bg-zinc-900/95 border-zinc-800 text-zinc-100"
+            : "bg-white/95 border-zinc-200 text-zinc-900"
         }`}
       >
-        <div className="font-medium mb-1">{formatted}</div>
+        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+          <Calendar className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 shrink-0" />
+          <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">{formattedDate}</span>
+        </div>
+
         {total === 0 ? (
-          <div className={isDark ? "text-zinc-500" : "text-gray-400"}>
-            No entries
+          <div className="text-xs text-zinc-600 dark:text-zinc-400 py-0.5">
+            No habits logged this day
           </div>
         ) : (
-          <>
-            <div className="font-semibold text-sm mb-1.5">
-              {total.toFixed(1)}h total
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-zinc-600 dark:text-zinc-400">Total Tracked</span>
+              <span className="font-bold text-emerald-500">
+                {total.toFixed(1)} hrs
+              </span>
             </div>
-            <div className="space-y-0.5">
+
+            <div className="space-y-1.5 pt-1">
               {breakdown.map((b) => (
-                <div key={b.taskId} className="flex items-center gap-1.5">
-                  <div
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: b.color }}
-                  />
-                  <span className="truncate">
-                    {b.emoji ? `${b.emoji} ` : ""}
-                    {b.name}
-                  </span>
-                  <span className={`ml-auto shrink-0 ${isDark ? "text-zinc-400" : "text-gray-500"}`}>
+                <div
+                  key={b.taskId}
+                  className="flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                      style={{
+                        backgroundColor: `${b.color}20`,
+                        color: b.color,
+                      }}
+                    >
+                      <TaskIcon name={b.emoji} className="w-3 h-3" />
+                    </div>
+                    <span className="font-medium truncate text-zinc-700 dark:text-zinc-300">
+                      {b.name}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 shrink-0">
                     {b.hours}h
                   </span>
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

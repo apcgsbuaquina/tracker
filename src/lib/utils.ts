@@ -32,16 +32,27 @@ export function parseDate(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
+export type Thresholds = [number, number, number];
+
+export const DEFAULT_THRESHOLDS: Thresholds = [1, 2, 4];
+
 /**
  * Map a numeric value to an intensity bucket (0 = empty, 4 = max).
- * Uses a logarithmic-ish scale so low values still show color.
+ * Uses explicit hour thresholds:
+ * - 0: 0 hours
+ * - 1: > 0 and < thresholds[0]
+ * - 2: >= thresholds[0] and < thresholds[1]
+ * - 3: >= thresholds[1] and < thresholds[2]
+ * - 4: >= thresholds[2]
  */
-export function bucketValue(value: number, max: number): 0 | 1 | 2 | 3 | 4 {
-  if (value <= 0 || max <= 0) return 0;
-  const ratio = value / max;
-  if (ratio <= 0.1) return 1;
-  if (ratio <= 0.35) return 2;
-  if (ratio <= 0.65) return 3;
+export function bucketValue(
+  value: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS
+): 0 | 1 | 2 | 3 | 4 {
+  if (value <= 0) return 0;
+  if (value < thresholds[0]) return 1;
+  if (value < thresholds[1]) return 2;
+  if (value < thresholds[2]) return 3;
   return 4;
 }
 
@@ -125,15 +136,13 @@ export function intensityColor(
   isDark: boolean
 ): string {
   if (bucket === 0) {
-    return isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+    return isDark ? "#18181b" : "#f1f5f9";
   }
   const { h, s } = hexToHsl(baseHex);
-  // Map bucket to lightness: in dark mode high bucket = brighter,
-  // in light mode high bucket = darker (more saturated)
   const lightnessMap = isDark
-    ? { 1: 18, 2: 28, 3: 40, 4: 52 }
-    : { 1: 85, 2: 70, 3: 52, 4: 38 };
-  const saturation = Math.min(s + 10, 100);
+    ? { 1: 20, 2: 32, 3: 46, 4: 58 }
+    : { 1: 82, 2: 66, 3: 50, 4: 36 };
+  const saturation = Math.min(s + 5, 100);
   return `hsl(${h}, ${saturation}%, ${lightnessMap[bucket]}%)`;
 }
 
