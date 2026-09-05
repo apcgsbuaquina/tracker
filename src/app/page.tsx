@@ -60,22 +60,27 @@ export default function DashboardPage() {
     const startStr = formatDate(startDate);
     const endStr = formatDate(endDate);
 
-    const [tasksRes, entriesRes] = await Promise.all([
-      supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("entries")
-        .select("*, tasks(name, color, emoji)")
-        .gte("entry_date", startStr)
-        .lte("entry_date", endStr)
-        .order("entry_date", { ascending: true }),
-    ]);
+    try {
+      const [tasksRes, entriesRes] = await Promise.all([
+        supabase
+          .from("tasks")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("entries")
+          .select("*, tasks(name, color, emoji)")
+          .gte("entry_date", startStr)
+          .lte("entry_date", endStr)
+          .order("entry_date", { ascending: true }),
+      ]);
 
-    setTasks((tasksRes.data as Task[]) ?? []);
-    setEntries((entriesRes.data as EntryWithTask[]) ?? []);
-    setLoading(false);
+      setTasks((tasksRes.data as Task[]) ?? []);
+      setEntries((entriesRes.data as unknown as EntryWithTask[]) ?? []);
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [supabase, startDate, endDate]);
 
   useEffect(() => {
@@ -105,11 +110,12 @@ export default function DashboardPage() {
 
     for (const entry of filtered) {
       const existing = map.get(entry.entry_date);
+      const meta = Array.isArray(entry.tasks) ? entry.tasks[0] : entry.tasks;
       const breakdown: TaskBreakdown = {
         taskId: entry.task_id,
-        name: entry.tasks.name,
-        color: entry.tasks.color,
-        emoji: entry.tasks.emoji,
+        name: meta?.name ?? "Unknown task",
+        color: meta?.color ?? "#22c55e",
+        emoji: meta?.emoji ?? null,
         hours: Number(entry.hours),
         note: entry.note,
       };
@@ -163,9 +169,10 @@ export default function DashboardPage() {
 
     const rows = [["Date", "Task", "Hours", "Note"]];
     for (const e of filtered) {
+      const meta = Array.isArray(e.tasks) ? e.tasks[0] : e.tasks;
       rows.push([
         e.entry_date,
-        e.tasks.name,
+        meta?.name ?? "Unknown task",
         String(e.hours),
         e.note ?? "",
       ]);

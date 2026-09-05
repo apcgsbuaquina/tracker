@@ -18,9 +18,11 @@ export interface Entry {
   created_at: string;
 }
 
+export type TaskMeta = Pick<Task, "name" | "color" | "emoji">;
+
 /** An entry joined with its parent task (used for dashboard queries). */
 export interface EntryWithTask extends Entry {
-  tasks: Pick<Task, "name" | "color" | "emoji">;
+  tasks: TaskMeta | TaskMeta[] | null;
 }
 
 /** Per-task breakdown for a single day (used by heatmap tooltip). */

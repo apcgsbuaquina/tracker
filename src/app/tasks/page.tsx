@@ -15,12 +15,17 @@ export default function TasksPage() {
   const [showForm, setShowForm] = useState(false);
 
   const fetchTasks = useCallback(async () => {
-    const { data } = await supabase
-      .from("tasks")
-      .select("*")
-      .order("created_at", { ascending: true });
-    setTasks((data as Task[]) ?? []);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: true });
+      setTasks((data as Task[]) ?? []);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [supabase]);
 
   useEffect(() => {

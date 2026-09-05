@@ -33,30 +33,35 @@ export default function DayEntryModal({
   const activeTasks = tasks.filter((t) => !t.is_archived);
 
   const fetchExisting = useCallback(async () => {
-    const { data } = await supabase
-      .from("entries")
-      .select("*")
-      .eq("entry_date", date)
-      .in(
-        "task_id",
-        activeTasks.map((t) => t.id)
+    try {
+      const { data } = await supabase
+        .from("entries")
+        .select("*")
+        .eq("entry_date", date)
+        .in(
+          "task_id",
+          activeTasks.map((t) => t.id)
+        );
+
+      const entries = (data as Entry[]) ?? [];
+      const entryMap = new Map(entries.map((e) => [e.task_id, e]));
+
+      setDrafts(
+        activeTasks.map((t) => {
+          const existing = entryMap.get(t.id);
+          return {
+            taskId: t.id,
+            hours: existing ? String(existing.hours) : "",
+            note: existing?.note ?? "",
+            existing: !!existing,
+          };
+        })
       );
-
-    const entries = (data as Entry[]) ?? [];
-    const entryMap = new Map(entries.map((e) => [e.task_id, e]));
-
-    setDrafts(
-      activeTasks.map((t) => {
-        const existing = entryMap.get(t.id);
-        return {
-          taskId: t.id,
-          hours: existing ? String(existing.hours) : "",
-          note: existing?.note ?? "",
-          existing: !!existing,
-        };
-      })
-    );
-    setLoading(false);
+    } catch (err) {
+      console.error("Failed to load existing entries:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [supabase, date, activeTasks]);
 
   useEffect(() => {
