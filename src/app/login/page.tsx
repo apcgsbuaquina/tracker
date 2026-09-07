@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,7 +11,10 @@ import {
   Sparkles,
   AlertCircle,
   CheckCircle2,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { toggleTheme } from "@/lib/theme";
 
 type AuthMode = "signin" | "signup" | "magic";
 
@@ -25,8 +28,19 @@ export default function LoginPage() {
     type: "error" | "success";
     text: string;
   } | null>(null);
+  const [isDark, setIsDark] = useState(false);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const dark =
+      stored !== null
+        ? stored === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,7 +87,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 transition-colors">
+    <div className="min-h-screen relative flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+      {/* Theme Toggle in top right */}
+      <div className="absolute top-4 right-4">
+        <button
+          type="button"
+          onClick={() => toggleTheme(isDark, setIsDark)}
+          className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 shadow-xs cursor-pointer"
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label="Toggle dark mode"
+        >
+          {isDark ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-zinc-600" />
+          )}
+        </button>
+      </div>
+
       <div className="w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8">

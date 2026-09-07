@@ -21,6 +21,7 @@ import {
   Command,
   Sliders,
 } from "lucide-react";
+import { toggleTheme } from "@/lib/theme";
 
 export default function DashboardPage() {
   const supabase = createClient();
@@ -47,11 +48,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
-    if (stored) {
-      setIsDark(stored === "dark");
-    } else {
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
+    const dark =
+      stored !== null
+        ? stored === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
 
     const storedThresholds = localStorage.getItem("tracker_thresholds");
     if (storedThresholds) {
@@ -64,10 +66,7 @@ export default function DashboardPage() {
   }, []);
 
   function toggleDarkMode() {
-    const next = !isDark;
-    setIsDark(next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", next);
+    toggleTheme(isDark, setIsDark);
   }
 
   function handleSaveThresholds(taskId: string, newThresholds: Thresholds) {
@@ -221,7 +220,7 @@ export default function DashboardPage() {
   const activeTasks = tasks.filter((t) => !t.is_archived);
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
