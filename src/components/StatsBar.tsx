@@ -51,31 +51,27 @@ export default function StatsBar({
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl border border-zinc-200/70 dark:border-zinc-800/80 overflow-hidden">
       {stats.map(({ label, value, unit, icon: Icon, color, bg }) => (
         <div
           key={label}
-          className="group relative overflow-hidden rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-4 shadow-sm hover:shadow-md transition-all duration-200"
+          className="group relative overflow-hidden px-3 py-4 sm:px-4 sm:py-3.5 border-zinc-200/70 dark:border-zinc-800/80 transition-colors duration-200 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 first:border-r last:border-l sm:border-r sm:last:border-l-0"
         >
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+          <div className="flex items-center gap-2 mb-2">
+            <div
+              className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 ${bg} ${color}`}
+            >
+              <Icon className="w-3 h-3 stroke-[2.2]" />
+            </div>
+            <span className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.14em] truncate">
               {label}
             </span>
-            <div
-              className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${bg} ${color}`}
-            >
-              <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
-            </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
               {value}
             </span>
-            {unit && (
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                {unit}
-              </span>
-            )}
+            {unit && <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit}</span>}
           </div>
         </div>
       ))}

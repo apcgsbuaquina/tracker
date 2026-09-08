@@ -19,6 +19,8 @@ import {
   Plus,
   Filter,
   Command,
+  Quote,
+  ChevronDown,
   Sliders,
 } from "lucide-react";
 import { toggleTheme } from "@/lib/theme";
@@ -31,6 +33,7 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filterTaskId, setFilterTaskId] = useState<string>("all");
   const [isDark, setIsDark] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [showThresholdsModal, setShowThresholdsModal] = useState(false);
   const [thresholdsMap, setThresholdsMap] = useState<Record<string, Thresholds>>({
     all: DEFAULT_THRESHOLDS,
@@ -221,14 +224,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+    <div className="grain-page min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
         {/* Top Control Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h1 className="grain-text text-3xl font-bold tracking-[-0.03em] text-zinc-900 dark:text-zinc-100">
               Overview
             </h1>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -236,7 +239,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 lg:flex-nowrap lg:max-w-none lg:justify-end">
             {/* Filter Dropdown */}
             <div className="relative">
               <select
@@ -297,17 +300,10 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Stats Metrics Grid */}
-            <StatsBar
-              streak={stats.streak}
-              totalHours={stats.totalHours}
-              daysLogged={stats.daysLogged}
-              avgHoursPerDay={stats.avgHoursPerDay}
-            />
-
             {/* Heatmap Card */}
-            <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+            <div className="grain-surface rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/60 shadow-sm overflow-hidden">
+              <div className="p-5 sm:p-6 pb-0">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     {filterTaskId === "all"
@@ -327,7 +323,34 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <Heatmap
+                <button
+                  type="button"
+                  onClick={() => setShowInsights((open) => !open)}
+                  aria-expanded={showInsights}
+                  className="group flex w-full items-center justify-between gap-3 mb-4 pt-1 text-left cursor-pointer"
+                >
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span className="font-semibold uppercase tracking-[0.14em] text-zinc-700 dark:text-zinc-300">Insights</span>
+                    <span className="mx-2 text-zinc-300 dark:text-zinc-700">/</span>
+                    {stats.streak} day streak · {stats.daysLogged} active days · {stats.avgHoursPerDay.toFixed(1)} hrs/day average
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-zinc-400 transition-transform duration-200 ${showInsights ? "rotate-180" : ""}`} />
+                </button>
+
+                {showInsights && (
+                  <div className="mb-4 animate-in fade-in duration-200">
+                    <StatsBar
+                      streak={stats.streak}
+                      totalHours={stats.totalHours}
+                      daysLogged={stats.daysLogged}
+                      avgHoursPerDay={stats.avgHoursPerDay}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5 sm:p-6 pt-4 sm:pt-5">
+                <Heatmap
                 data={dayMap}
                 baseColor={heatmapColor}
                 startDate={startDate}
@@ -340,8 +363,22 @@ export default function DashboardPage() {
                 }
                 isCombined={filterTaskId === "all"}
                 isBooleanTask={isBooleanTask}
-              />
+                />
+              </div>
             </div>
+
+            <blockquote className="mx-auto max-w-2xl px-4 py-1 text-center">
+              <div className="flex items-start justify-center gap-2.5">
+                <Quote className="w-4 h-4 shrink-0 mt-0.5 text-orange-500/80" />
+                <p className="grain-text text-sm sm:text-base leading-relaxed italic text-zinc-700 dark:text-zinc-300">
+                  “We are what we repeatedly do. Excellence, then, is not an act, but a habit.”
+                </p>
+                <Quote className="w-4 h-4 shrink-0 mt-0.5 rotate-180 text-orange-500/80" />
+              </div>
+              <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+                — Aristotle
+              </footer>
+            </blockquote>
           </>
         )}
       </main>
