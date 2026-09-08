@@ -133,7 +133,7 @@ export default function Heatmap({
             {monthLabels.map(({ label, col }, i) => (
               <span
                 key={i}
-                className="text-[10px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 absolute"
+                className="text-[10px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-200 absolute"
                 style={{
                   left: col * (CELL_SIZE + CELL_GAP),
                 }}
@@ -153,7 +153,7 @@ export default function Heatmap({
               {DAY_LABELS.map((label, i) => (
                 <div
                   key={label}
-                  className="flex items-center justify-end pr-1.5 text-[9px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400"
+                  className="flex items-center justify-end pr-1.5 text-[9px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-200"
                   style={{
                     height: CELL_SIZE,
                     visibility: i % 2 === 0 ? "visible" : "hidden",
@@ -233,14 +233,14 @@ export default function Heatmap({
       )}
 
       {/* Footer Legend */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-4 pt-3 border-t border-zinc-100/80 dark:border-zinc-800/80 text-[11px] text-zinc-700 dark:text-zinc-300">
-        <span className="text-zinc-700 dark:text-zinc-300">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-2 pt-1 text-[11px] text-zinc-700 dark:text-zinc-200">
+        <span className="text-zinc-700 dark:text-zinc-200">
           Click on any square to view, log, edit, or delete hours
         </span>
 
         {!isBooleanTask && <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">0h</span>
+            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-200">0h</span>
             {([0, 1, 2, 3, 4] as const).map((bucket) => (
               <div
                 key={bucket}
@@ -265,7 +265,7 @@ export default function Heatmap({
                 }
               />
             ))}
-            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+            <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-200">
               {thresholds[2]}h+
             </span>
           </div>

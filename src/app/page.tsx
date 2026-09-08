@@ -221,7 +221,7 @@ export default function DashboardPage() {
     <div className="grain-page h-screen overflow-y-clip bg-transparent text-zinc-900 dark:text-zinc-100">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
 
-      <main className="flex h-[calc(100vh-4rem)] max-w-6xl mx-auto flex-col overflow-y-clip px-4 sm:px-6 py-6 sm:py-8 space-y-4">
+      <main className="flex h-[calc(100vh-3rem)] max-w-6xl mx-auto flex-col overflow-y-clip px-4 sm:px-6 py-6 sm:py-8 space-y-4">
         <div className="flex flex-1 flex-col justify-center gap-4">
         {/* Top Control Bar */}
         <div className="relative z-10 -translate-y-7 flex min-w-0 flex-col lg:flex-row lg:items-end justify-end gap-6">
@@ -290,14 +290,14 @@ export default function DashboardPage() {
             {/* Heatmap Card */}
             <div className="glass-panel grain-surface relative z-20 rounded-2xl overflow-visible">
               <div className="p-5 sm:p-6 pb-0">
-                <div className="flex items-center justify-between mb-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                <div className="flex items-center justify-between mb-2 pb-3">
                 <div className="flex items-center gap-2 min-w-0 flex-wrap">
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     {filterTaskId === "all"
                       ? "Combined Activity"
                       : activeTasks.find((t) => t.id === filterTaskId)?.name ?? "Selected Habit"}
                   </span>
-                  <span className="text-xs text-zinc-700/80 dark:text-zinc-300/80">
+                  <span className="text-xs text-zinc-700/80 dark:text-zinc-100/90">
                     · {stats.totalHours.toFixed(1)} hrs logged · {stats.daysLogged} entries · {stats.avgHoursPerDay.toFixed(1)} hrs/day avg
                   </span>
                 </div>
@@ -332,11 +332,11 @@ export default function DashboardPage() {
 
             <blockquote className="absolute left-1/2 top-full mt-6 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 px-4 py-1 text-center">
               <div className="flex items-start justify-center">
-                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-230 dark:text-zinc-200">
+                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-230 dark:text-zinc-800">
                   “We are what we repeatedly do. Excellence, then, is not an act, but a habit.”
                 </p>
               </div>
-              <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950/75 dark:text-zinc-300/80">
+                <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950/75 dark:text-zinc-800/80">
                 — Aristotle
               </footer>
             </blockquote>
