@@ -229,16 +229,7 @@ export default function DashboardPage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
         {/* Top Control Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div>
-            <h1 className="grain-text text-3xl font-bold tracking-[-0.03em] text-zinc-900 dark:text-zinc-100">
-              Overview
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Annual consistency grid and habit performance metrics.
-            </p>
-          </div>
-
+        <div className="flex flex-col lg:flex-row lg:items-end justify-end gap-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 lg:flex-nowrap lg:max-w-none lg:justify-end">
             {/* Filter Dropdown */}
             <div className="relative">

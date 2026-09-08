@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   CheckSquare2,
@@ -22,14 +21,6 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const [email, setEmail] = useState<string>("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setEmail(user.email);
-    });
-  }, [supabase]);
-
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/login");
@@ -44,8 +35,16 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Nav links */}
-        <nav className="flex items-center gap-1">
+        {/* Brand and nav links */}
+        <div className="flex items-center gap-5">
+          <Link
+            href="/"
+            className="text-sm font-black tracking-[0.18em] text-zinc-900 dark:text-zinc-100"
+          >
+            COMPOUND
+          </Link>
+
+          <nav className="flex items-center gap-1">
             {links.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
               return (
@@ -64,6 +63,7 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
               );
             })}
           </nav>
+        </div>
 
         {/* Right side controls */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -87,12 +87,14 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
 
           {/* User profile & sign out */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-100/80 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 max-w-[170px] sm:max-w-[220px]">
-              <div className="w-4 h-4 rounded-full bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
-                <User className="w-2.5 h-2.5" />
-              </div>
-              <span className="truncate">{email || "Account"}</span>
-            </div>
+            <button
+              type="button"
+              className="p-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+              title="Account"
+              aria-label="Account"
+            >
+              <User className="w-3.5 h-3.5" />
+            </button>
 
             <button
               onClick={handleSignOut}
