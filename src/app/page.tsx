@@ -23,10 +23,12 @@ import { toggleTheme } from "@/lib/theme";
 
 export default function DashboardPage() {
   const supabase = createClient();
+  const currentYear = new Date().getFullYear();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [entries, setEntries] = useState<EntryWithTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [filterTaskId, setFilterTaskId] = useState<string>("all");
   const [isDark, setIsDark] = useState(false);
   const [showThresholdsModal, setShowThresholdsModal] = useState(false);
@@ -34,15 +36,13 @@ export default function DashboardPage() {
     all: DEFAULT_THRESHOLDS,
   });
 
-  // Date range: ~12 months back from today
-  const endDate = useMemo(() => new Date(), []);
+  // Date range: the complete current calendar year
   const startDate = useMemo(() => {
-    const d = new Date(endDate);
-    d.setFullYear(d.getFullYear() - 1);
-    const dow = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - dow);
-    return d;
-  }, [endDate]);
+    return new Date(selectedYear, 0, 1);
+  }, [selectedYear]);
+  const endDate = useMemo(() => {
+    return new Date(selectedYear, 11, 31);
+  }, [selectedYear]);
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -231,7 +231,7 @@ export default function DashboardPage() {
               <select
                 value={filterTaskId}
                 onChange={(e) => setFilterTaskId(e.target.value)}
-                className="w-full max-w-full appearance-none truncate pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40 cursor-pointer shadow-xs transition-colors sm:w-auto"
+                className="w-full max-w-full appearance-none truncate pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40 cursor-pointer shadow-xs transition-colors sm:w-auto"
               >
                 <option value="all">All Habits Combined</option>
                 {activeTasks.map((t) => (
@@ -289,8 +289,8 @@ export default function DashboardPage() {
             <div className="relative z-20 -translate-y-7 flex flex-col justify-start">
             {/* Heatmap Card */}
             <div className="glass-panel grain-surface relative z-20 rounded-2xl overflow-visible">
-              <div className="p-5 sm:p-6 pb-0">
-                <div className="flex items-center justify-between mb-2 pb-3">
+              <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-0">
+                <div className="flex items-center justify-between mb-0 pb-1">
                 <div className="flex items-center gap-2 min-w-0 flex-wrap">
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     {filterTaskId === "all"
@@ -302,7 +302,18 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-zinc-700/80 dark:text-zinc-300/80">
+                <div className="flex items-center gap-2 text-xs text-zinc-700/80 dark:text-zinc-100/90">
+                  <label htmlFor="heatmap-year" className="hidden sm:inline">Year:</label>
+                  <select
+                    id="heatmap-year"
+                    value={selectedYear}
+                    onChange={(event) => setSelectedYear(Number(event.target.value))}
+                    className="rounded-md border border-zinc-200 bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-700 outline-none transition-colors hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:border-zinc-600"
+                  >
+                    {[currentYear, currentYear + 1].map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                   <span className="hidden sm:inline">Quick log:</span>
                   <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[10px] font-mono">
                     <Command className="w-2.5 h-2.5" />L
@@ -312,7 +323,7 @@ export default function DashboardPage() {
 
               </div>
 
-              <div className="-mt-4 flex min-h-[250px] flex-col justify-center p-5 sm:p-6 pt-0">
+              <div className="-mt-1 flex min-h-0 flex-col justify-start p-5 sm:p-6 pt-0 pb-0">
                 <Heatmap
                 data={dayMap}
                 baseColor={heatmapColor}

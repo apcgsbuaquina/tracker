@@ -233,7 +233,7 @@ export default function Heatmap({
       )}
 
       {/* Footer Legend */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-2 pt-1 text-[11px] text-zinc-700 dark:text-zinc-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-0 pt-1 text-[11px] text-zinc-700 dark:text-zinc-200">
         <span className="text-zinc-700 dark:text-zinc-200">
           Click on any square to view, log, edit, or delete hours
         </span>
