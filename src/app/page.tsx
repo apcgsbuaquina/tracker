@@ -301,7 +301,7 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Heatmap Card */}
-            <div className="grain-surface rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/60 shadow-sm overflow-hidden">
+            <div className="grain-surface rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/60 shadow-sm overflow-visible">
               <div className="p-5 sm:p-6 pb-0">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                 <div className="flex items-center gap-2">
