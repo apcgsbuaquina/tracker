@@ -53,6 +53,8 @@ export default function TasksPage() {
     name: string;
     color: string;
     emoji: string;
+    task_type: "time" | "boolean";
+    estimated_minutes: number | null;
   }) {
     const {
       data: { user },
@@ -62,7 +64,13 @@ export default function TasksPage() {
     if (editingTask) {
       await supabase
         .from("tasks")
-        .update({ name: data.name, color: data.color, emoji: data.emoji || null })
+        .update({
+          name: data.name,
+          color: data.color,
+          emoji: data.emoji || null,
+          task_type: data.task_type,
+          estimated_minutes: data.estimated_minutes,
+        })
         .eq("id", editingTask.id);
     } else {
       await supabase.from("tasks").insert({
@@ -70,6 +78,8 @@ export default function TasksPage() {
         name: data.name,
         color: data.color,
         emoji: data.emoji || null,
+        task_type: data.task_type,
+        estimated_minutes: data.estimated_minutes,
       });
     }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Task, Entry } from "@/lib/types";
-import { parseDate } from "@/lib/utils";
+import { parseDate, formatDurationMinutes } from "@/lib/utils";
 import TaskIcon from "@/components/TaskIcon";
 import {
   Calendar,
@@ -14,6 +14,7 @@ import {
   Trash2,
   AlertTriangle,
   RotateCcw,
+  ToggleRight,
 } from "lucide-react";
 
 interface DayEntryModalProps {
@@ -29,6 +30,8 @@ interface EntryDraft {
   note: string;
   existing: boolean;
   markedForDeletion?: boolean;
+  // For boolean tasks: whether the task is checked as "done"
+  isDone?: boolean;
 }
 
 export default function DayEntryModal({
@@ -62,12 +65,26 @@ export default function DayEntryModal({
       setDrafts(
         activeTasks.map((t) => {
           const existing = entryMap.get(t.id);
+          const hasEntry = !!existing;
+
+          if (t.task_type === "boolean") {
+            return {
+              taskId: t.id,
+              hours: existing ? String(existing.hours) : "",
+              note: existing?.note ?? "",
+              existing: hasEntry,
+              markedForDeletion: false,
+              isDone: hasEntry, // checked = entry exists
+            };
+          }
+
           return {
             taskId: t.id,
             hours: existing ? String(existing.hours) : "",
             note: existing?.note ?? "",
-            existing: !!existing,
+            existing: hasEntry,
             markedForDeletion: false,
+            isDone: undefined,
           };
         })
       );
@@ -76,12 +93,15 @@ export default function DayEntryModal({
     } finally {
       setLoading(false);
     }
-  }, [supabase, date, activeTasks]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase, date]);
 
   useEffect(() => {
     fetchExisting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Time-task helpers ──────────────────────────────────────────────────────
 
   function updateDraft(
     taskId: string,
@@ -112,23 +132,37 @@ export default function DayEntryModal({
     );
   }
 
-  // Toggle deletion of an individual task entry
   function toggleDeleteEntry(taskId: string) {
     setDrafts((prev) =>
       prev.map((d) => {
         if (d.taskId !== taskId) return d;
         if (d.markedForDeletion) {
-          // Undo delete
           return { ...d, markedForDeletion: false };
-        } else {
-          // Mark for deletion and clear hours
-          return { ...d, hours: "", note: "", markedForDeletion: true };
         }
+        return { ...d, hours: "", note: "", markedForDeletion: true };
       })
     );
   }
 
-  // Delete all entries for this specific day immediately
+  // ── Boolean-task helpers ───────────────────────────────────────────────────
+
+  function toggleBooleanDone(taskId: string) {
+    setDrafts((prev) =>
+      prev.map((d) => {
+        if (d.taskId !== taskId) return d;
+        const next = !d.isDone;
+        return {
+          ...d,
+          isDone: next,
+          markedForDeletion: !next && d.existing, // mark for deletion if un-checking an existing entry
+          hours: next ? d.hours : "", // preserve hours value for save logic
+        };
+      })
+    );
+  }
+
+  // ── Delete all ─────────────────────────────────────────────────────────────
+
   async function handleDeleteAllDayEntries() {
     setSaving(true);
     const {
@@ -147,6 +181,8 @@ export default function DayEntryModal({
     }
   }
 
+  // ── Save ───────────────────────────────────────────────────────────────────
+
   async function handleSave() {
     setSaving(true);
     const {
@@ -154,32 +190,53 @@ export default function DayEntryModal({
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Filter valid rows to upsert
-    const rows = drafts
-      .filter(
-        (d) =>
-          !d.markedForDeletion &&
-          d.hours !== "" &&
-          parseFloat(d.hours) > 0
-      )
-      .map((d) => ({
-        user_id: user.id,
-        task_id: d.taskId,
-        entry_date: date,
-        hours: parseFloat(d.hours),
-        note: d.note.trim() || null,
-      }));
+    // Build upsert rows
+    const rows: {
+      user_id: string;
+      task_id: string;
+      entry_date: string;
+      hours: number;
+      note: string | null;
+    }[] = [];
+    const toDelete: string[] = [];
 
-    // Identify rows that need removal
-    const toDelete = drafts
-      .filter(
-        (d) =>
+    for (const d of drafts) {
+      const task = activeTasks.find((t) => t.id === d.taskId);
+      if (!task) continue;
+
+      if (task.task_type === "boolean") {
+        if (d.isDone && !d.markedForDeletion) {
+          // Checked: log estimated duration as hours (default 1h if not set)
+          const hrs = (task.estimated_minutes ?? 60) / 60;
+          rows.push({
+            user_id: user.id,
+            task_id: d.taskId,
+            entry_date: date,
+            hours: hrs,
+            note: d.note.trim() || null,
+          });
+        } else if (d.existing && (!d.isDone || d.markedForDeletion)) {
+          // Un-checked a previously saved entry → delete
+          toDelete.push(d.taskId);
+        }
+      } else {
+        // Time task
+        if (!d.markedForDeletion && d.hours !== "" && parseFloat(d.hours) > 0) {
+          rows.push({
+            user_id: user.id,
+            task_id: d.taskId,
+            entry_date: date,
+            hours: parseFloat(d.hours),
+            note: d.note.trim() || null,
+          });
+        } else if (
           d.existing &&
-          (d.markedForDeletion ||
-            d.hours === "" ||
-            parseFloat(d.hours) === 0)
-      )
-      .map((d) => d.taskId);
+          (d.markedForDeletion || d.hours === "" || parseFloat(d.hours) === 0)
+        ) {
+          toDelete.push(d.taskId);
+        }
+      }
+    }
 
     try {
       if (rows.length > 0) {
@@ -204,6 +261,8 @@ export default function DayEntryModal({
       setSaving(false);
     }
   }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   const dateObj = parseDate(date);
   const formattedDate = dateObj.toLocaleDateString("en-US", {
@@ -232,7 +291,7 @@ export default function DayEntryModal({
             </div>
             <div>
               <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Log, Edit, or Delete Hours
+                Log, Edit, or Delete
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 {formattedDate}
@@ -263,8 +322,15 @@ export default function DayEntryModal({
               const task = activeTasks.find((t) => t.id === draft.taskId);
               if (!task) return null;
 
+              const isBoolean = task.task_type === "boolean";
               const hasHours = parseFloat(draft.hours) > 0;
               const isMarkedDelete = draft.markedForDeletion;
+              const isDone = draft.isDone ?? false;
+
+              // Boolean card is "active" if checked and not marked for deletion
+              const boolActive = isBoolean && isDone && !isMarkedDelete;
+              // Time card is "active" if has hours and not marked for deletion
+              const timeActive = !isBoolean && hasHours && !isMarkedDelete;
 
               return (
                 <div
@@ -272,13 +338,14 @@ export default function DayEntryModal({
                   className={`p-3.5 rounded-xl border transition-all duration-150 ${
                     isMarkedDelete
                       ? "border-rose-300 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 opacity-75"
-                      : hasHours
+                      : boolActive || timeActive
                       ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10"
                       : "border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-950/40"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-3 mb-2.5">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Left: icon + name */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-xs"
                         style={{
@@ -289,65 +356,107 @@ export default function DayEntryModal({
                       >
                         <TaskIcon name={task.emoji} className="w-4 h-4" />
                       </div>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                          {task.name}
-                        </span>
-                        {draft.existing && !isMarkedDelete && (
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            Logged
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                            {task.name}
                           </span>
-                        )}
-                        {isMarkedDelete && (
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                            Will Delete
+                          {/* Status badges */}
+                          {isMarkedDelete ? (
+                            <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                              Will Delete
+                            </span>
+                          ) : (boolActive || (draft.existing && !isBoolean && !isMarkedDelete)) ? (
+                            <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              Logged
+                            </span>
+                          ) : null}
+                        </div>
+                        {/* Type sub-label */}
+                        {isBoolean && task.estimated_minutes != null && (
+                          <span className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5">
+                            <ToggleRight className="w-2.5 h-2.5" />
+                            {formatDurationMinutes(task.estimated_minutes)} estimated
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Quick increment & Delete buttons */}
-                    <div className="flex items-center gap-1">
-                      {isMarkedDelete ? (
-                        <button
-                          type="button"
-                          onClick={() => toggleDeleteEntry(task.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-500 transition-colors cursor-pointer"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>Undo</span>
-                        </button>
+                    {/* Right: controls */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isBoolean ? (
+                        // ── Boolean toggle ──────────────────────────────────
+                        isMarkedDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleDeleteEntry(task.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-500 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Undo</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => toggleBooleanDone(task.id)}
+                            className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer focus:outline-none ${
+                              isDone
+                                ? "bg-emerald-500"
+                                : "bg-zinc-200 dark:bg-zinc-700"
+                            }`}
+                            aria-pressed={isDone}
+                            aria-label={isDone ? "Mark as not done" : "Mark as done"}
+                          >
+                            <span
+                              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                                isDone ? "translate-x-6" : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        )
                       ) : (
-                        <>
-                          {[0.5, 1, 2].map((inc) => (
-                            <button
-                              key={inc}
-                              type="button"
-                              onClick={() => addQuickHours(task.id, inc)}
-                              className="px-2 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-emerald-500/50 hover:text-emerald-500 transition-colors cursor-pointer"
-                            >
-                              +{inc}h
-                            </button>
-                          ))}
+                        // ── Time-task controls ──────────────────────────────
+                        isMarkedDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleDeleteEntry(task.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-500 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Undo</span>
+                          </button>
+                        ) : (
+                          <>
+                            {[0.5, 1, 2].map((inc) => (
+                              <button
+                                key={inc}
+                                type="button"
+                                onClick={() => addQuickHours(task.id, inc)}
+                                className="px-2 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-emerald-500/50 hover:text-emerald-500 transition-colors cursor-pointer"
+                              >
+                                +{inc}h
+                              </button>
+                            ))}
 
-                          {(draft.existing || hasHours) && (
-                            <button
-                              type="button"
-                              onClick={() => toggleDeleteEntry(task.id)}
-                              className="p-1 rounded-md text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors ml-1 cursor-pointer"
-                              title="Delete entry for this habit"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </>
+                            {(draft.existing || hasHours) && (
+                              <button
+                                type="button"
+                                onClick={() => toggleDeleteEntry(task.id)}
+                                className="p-1 rounded-md text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors ml-1 cursor-pointer"
+                                title="Delete entry for this habit"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </>
+                        )
                       )}
                     </div>
                   </div>
 
-                  {/* Input row (disabled if marked for deletion) */}
-                  {!isMarkedDelete && (
-                    <div className="flex items-center gap-2">
+                  {/* Input row — only for time tasks, not marked for deletion */}
+                  {!isBoolean && !isMarkedDelete && (
+                    <div className="flex items-center gap-2 mt-2.5">
                       <div className="relative w-28 shrink-0">
                         <input
                           type="number"
@@ -377,6 +486,23 @@ export default function DayEntryModal({
                         />
                         <FileText className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-2 pointer-events-none" />
                       </div>
+                    </div>
+                  )}
+
+                  {/* Note row for boolean tasks (only when checked) */}
+                  {isBoolean && isDone && !isMarkedDelete && (
+                    <div className="relative mt-2.5">
+                      <input
+                        type="text"
+                        maxLength={180}
+                        value={draft.note}
+                        onChange={(e) =>
+                          updateDraft(draft.taskId, "note", e.target.value)
+                        }
+                        placeholder="Optional note / reflection..."
+                        className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40"
+                      />
+                      <FileText className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-2 pointer-events-none" />
                     </div>
                   )}
                 </div>

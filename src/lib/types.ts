@@ -5,6 +5,8 @@ export interface Task {
   color: string;
   emoji: string | null;
   is_archived: boolean;
+  task_type: "time" | "boolean";
+  estimated_minutes: number | null;
   created_at: string;
 }
 

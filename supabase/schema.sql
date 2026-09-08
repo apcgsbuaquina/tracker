@@ -73,3 +73,13 @@ create index if not exists idx_entries_entry_date on public.entries (entry_date)
 create index if not exists idx_entries_task_id    on public.entries (task_id);
 create index if not exists idx_entries_user_id    on public.entries (user_id);
 create index if not exists idx_tasks_user_id      on public.tasks   (user_id);
+
+-- 4. Task-type columns (run these in Supabase SQL Editor if the table already exists) ------
+
+-- 'time'    → time-tracked habit (logs hours)
+-- 'boolean' → done / not-done habit (logs estimated_minutes / 60 as hours)
+alter table public.tasks
+  add column if not exists task_type         text    not null default 'time'
+    check (task_type in ('time', 'boolean')),
+  add column if not exists estimated_minutes integer
+    check (estimated_minutes > 0);
