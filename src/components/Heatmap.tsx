@@ -302,9 +302,10 @@ function combinedDayColor(
 
   for (const entry of dayData.breakdown) {
     const weight = entry.hours / dayData.totalHours;
-    const { h, s } = hexToHsl(
+    const { h, s: baseSaturation } = hexToHsl(
       HEATMAP_PALETTE[bucketValue(entry.hours, thresholds) - 1]
     );
+    const s = Math.min(baseSaturation + 5, 100);
     const lightness = intensityLightness(
       bucketValue(entry.hours, thresholds),
       isDark
@@ -315,7 +316,39 @@ function combinedDayColor(
     blue += entryBlue * weight;
   }
 
-  return `rgb(${Math.round(red)}, ${Math.round(green)}, ${Math.round(blue)})`;
+  const blendedColor = [red, green, blue];
+  const paletteColor = HEATMAP_PALETTE.reduce((closest, paletteHex) => {
+    const paletteRgb = hexToRgb(paletteHex);
+    return colorDistance(blendedColor, paletteRgb) <
+      colorDistance(blendedColor, hexToRgb(closest))
+      ? paletteHex
+      : closest;
+  });
+
+  return intensityColor(
+    bucketValue(dayData.totalHours, thresholds),
+    paletteColor,
+    isDark
+  );
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+}
+
+function colorDistance(
+  first: number[],
+  second: [number, number, number]
+): number {
+  return Math.sqrt(
+    (first[0] - second[0]) ** 2 +
+      (first[1] - second[1]) ** 2 +
+      (first[2] - second[2]) ** 2
+  );
 }
 
 function intensityLightness(bucket: 0 | 1 | 2 | 3 | 4, isDark: boolean): number {
