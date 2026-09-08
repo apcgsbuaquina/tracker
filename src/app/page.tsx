@@ -332,7 +332,7 @@ export default function DashboardPage() {
 
             <blockquote className="absolute left-1/2 top-full mt-6 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 px-4 py-1 text-center">
               <div className="flex items-start justify-center">
-                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-850 dark:text-zinc-200">
+                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-230 dark:text-zinc-200">
                   “We are what we repeatedly do. Excellence, then, is not an act, but a habit.”
                 </p>
               </div>
