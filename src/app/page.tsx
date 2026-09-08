@@ -343,11 +343,11 @@ export default function DashboardPage() {
 
             <blockquote className="absolute left-1/2 top-full mt-6 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 px-4 py-1 text-center">
               <div className="flex items-start justify-center">
-                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-230 dark:text-zinc-800">
+                <p className="grain-text quote-text-shadow text-sm sm:text-base leading-relaxed italic font-medium text-white dark:text-zinc-100">
                   “We are what we repeatedly do. Excellence, then, is not an act, but a habit.”
                 </p>
               </div>
-                <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950/75 dark:text-zinc-800/80">
+                <footer className="quote-text-shadow mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 dark:text-zinc-100/90">
                 — Aristotle
               </footer>
             </blockquote>
