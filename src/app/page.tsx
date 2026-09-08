@@ -5,13 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import type { Task, EntryWithTask, DayData, TaskBreakdown } from "@/lib/types";
 import {
   formatDate,
-  calculateStreak,
   type Thresholds,
   DEFAULT_THRESHOLDS,
 } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import Heatmap from "@/components/Heatmap";
-import StatsBar from "@/components/StatsBar";
 import DayEntryModal from "@/components/DayEntryModal";
 import ThresholdsModal from "@/components/ThresholdsModal";
 import {
@@ -19,8 +17,6 @@ import {
   Plus,
   Filter,
   Command,
-  Quote,
-  ChevronDown,
   Sliders,
 } from "lucide-react";
 import { toggleTheme } from "@/lib/theme";
@@ -33,7 +29,6 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filterTaskId, setFilterTaskId] = useState<string>("all");
   const [isDark, setIsDark] = useState(false);
-  const [showInsights, setShowInsights] = useState(false);
   const [showThresholdsModal, setShowThresholdsModal] = useState(false);
   const [thresholdsMap, setThresholdsMap] = useState<Record<string, Thresholds>>({
     all: DEFAULT_THRESHOLDS,
@@ -183,10 +178,9 @@ export default function DashboardPage() {
       }
     }
 
-    const streak = calculateStreak(dayMap);
     const avgHoursPerDay = daysLogged > 0 ? totalHours / daysLogged : 0;
 
-    return { streak, totalHours, daysLogged, avgHoursPerDay };
+    return { totalHours, daysLogged, avgHoursPerDay };
   }, [dayMap]);
 
   // Determine heatmap active color
@@ -224,12 +218,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="grain-page min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+    <div className="grain-page h-screen overflow-y-clip bg-transparent text-zinc-900 dark:text-zinc-100">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
+      <main className="flex h-[calc(100vh-4rem)] max-w-6xl mx-auto flex-col overflow-y-clip px-4 sm:px-6 py-6 sm:py-8 space-y-4">
+        <div className="flex flex-1 flex-col justify-center gap-4">
         {/* Top Control Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-end gap-6">
+        <div className="relative z-10 -translate-y-7 flex flex-col lg:flex-row lg:items-end justify-end gap-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 lg:flex-nowrap lg:max-w-none lg:justify-end">
             {/* Filter Dropdown */}
             <div className="relative">
@@ -291,22 +286,23 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            <div className="relative -translate-y-7 flex flex-col justify-start">
             {/* Heatmap Card */}
-            <div className="grain-surface rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/60 shadow-sm overflow-visible">
+            <div className="glass-panel grain-surface rounded-2xl overflow-visible">
               <div className="p-5 sm:p-6 pb-0">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                <div className="flex items-center gap-2 min-w-0 flex-wrap">
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     {filterTaskId === "all"
                       ? "Combined Activity"
                       : activeTasks.find((t) => t.id === filterTaskId)?.name ?? "Selected Habit"}
                   </span>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    · {stats.totalHours.toFixed(1)} hrs logged
+                  <span className="text-xs text-zinc-700/80 dark:text-zinc-300/80">
+                    · {stats.totalHours.toFixed(1)} hrs logged · {stats.daysLogged} entries · {stats.avgHoursPerDay.toFixed(1)} hrs/day avg
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center gap-2 text-xs text-zinc-700/80 dark:text-zinc-300/80">
                   <span className="hidden sm:inline">Quick log:</span>
                   <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[10px] font-mono">
                     <Command className="w-2.5 h-2.5" />L
@@ -314,33 +310,9 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowInsights((open) => !open)}
-                  aria-expanded={showInsights}
-                  className="group flex w-full items-center justify-between gap-3 mb-4 pt-1 text-left cursor-pointer"
-                >
-                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <span className="font-semibold uppercase tracking-[0.14em] text-zinc-700 dark:text-zinc-300">Insights</span>
-                    <span className="mx-2 text-zinc-300 dark:text-zinc-700">/</span>
-                    {stats.streak} day streak · {stats.daysLogged} active days · {stats.avgHoursPerDay.toFixed(1)} hrs/day average
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-zinc-400 transition-transform duration-200 ${showInsights ? "rotate-180" : ""}`} />
-                </button>
-
-                {showInsights && (
-                  <div className="mb-4 animate-in fade-in duration-200">
-                    <StatsBar
-                      streak={stats.streak}
-                      totalHours={stats.totalHours}
-                      daysLogged={stats.daysLogged}
-                      avgHoursPerDay={stats.avgHoursPerDay}
-                    />
-                  </div>
-                )}
               </div>
 
-              <div className="p-5 sm:p-6 pt-4 sm:pt-5">
+              <div className="-mt-4 flex min-h-[250px] flex-col justify-center p-5 sm:p-6 pt-0">
                 <Heatmap
                 data={dayMap}
                 baseColor={heatmapColor}
@@ -358,20 +330,20 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <blockquote className="mx-auto max-w-2xl px-4 py-1 text-center">
-              <div className="flex items-start justify-center gap-2.5">
-                <Quote className="w-4 h-4 shrink-0 mt-0.5 text-orange-500/80" />
-                <p className="grain-text text-sm sm:text-base leading-relaxed italic text-zinc-700 dark:text-zinc-300">
+            <blockquote className="absolute left-1/2 top-full mt-6 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 px-4 py-1 text-center">
+              <div className="flex items-start justify-center">
+                <p className="grain-text text-sm sm:text-base leading-relaxed italic font-medium text-zinc-850 dark:text-zinc-200">
                   “We are what we repeatedly do. Excellence, then, is not an act, but a habit.”
                 </p>
-                <Quote className="w-4 h-4 shrink-0 mt-0.5 rotate-180 text-orange-500/80" />
               </div>
-              <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+              <footer className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950/75 dark:text-zinc-300/80">
                 — Aristotle
               </footer>
             </blockquote>
+            </div>
           </>
         )}
+        </div>
       </main>
 
       {/* Day Entry Modal (Log, Edit, Delete) */}

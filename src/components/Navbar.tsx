@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import BackgroundPicker from "@/components/BackgroundPicker";
 import {
   LayoutDashboard,
   CheckSquare2,
@@ -39,7 +40,7 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
         <div className="flex items-center gap-5">
           <Link
             href="/"
-            className="text-sm font-black tracking-[0.18em] text-zinc-900 dark:text-zinc-100"
+            className="text-base font-black tracking-[0.1em] text-zinc-900 dark:text-zinc-100"
           >
             COMPOUND
           </Link>
@@ -67,6 +68,8 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
 
         {/* Right side controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <BackgroundPicker />
+
           {/* Dark Mode Toggle */}
           {onToggleDarkMode && (
             <button

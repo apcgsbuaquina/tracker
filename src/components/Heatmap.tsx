@@ -123,7 +123,7 @@ export default function Heatmap({
   return (
     <div className="relative select-none" ref={containerRef}>
       {/* Centered Scrollable Grid Container */}
-      <div className="overflow-x-auto pb-3 pt-1 scroll-smooth flex justify-center">
+      <div className="-translate-y-3 overflow-x-auto pb-1 pt-0 scroll-smooth flex items-center justify-center">
         <div
           className="inline-flex flex-col w-max mx-auto"
           style={{ paddingLeft: 34 }}
@@ -233,8 +233,8 @@ export default function Heatmap({
       )}
 
       {/* Footer Legend */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-zinc-600 dark:text-zinc-400">
-        <span className="text-zinc-600 dark:text-zinc-400">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mt-4 pt-3 border-t border-zinc-100/80 dark:border-zinc-800/80 text-[11px] text-zinc-700 dark:text-zinc-300">
+        <span className="text-zinc-700 dark:text-zinc-300">
           Click on any square to view, log, edit, or delete hours
         </span>
 
@@ -274,7 +274,7 @@ export default function Heatmap({
             <button
               type="button"
               onClick={onOpenThresholds}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-[10px] font-medium"
+              className="glass-control inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors cursor-pointer text-[10px] font-medium"
               title="Customize color shade hour thresholds"
             >
               <Sliders className="w-2.5 h-2.5" />

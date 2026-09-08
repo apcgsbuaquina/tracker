@@ -1,29 +1,19 @@
 "use client";
 
-import { Flame, Clock, CalendarCheck2, TrendingUp } from "lucide-react";
+import { Clock, CalendarCheck2, TrendingUp } from "lucide-react";
 
 interface StatsBarProps {
-  streak: number;
   totalHours: number;
   daysLogged: number;
   avgHoursPerDay: number;
 }
 
 export default function StatsBar({
-  streak,
   totalHours,
   daysLogged,
   avgHoursPerDay,
 }: StatsBarProps) {
   const stats = [
-    {
-      label: "Current Streak",
-      value: `${streak}`,
-      unit: streak === 1 ? "day" : "days",
-      icon: Flame,
-      color: "text-amber-500 dark:text-amber-400",
-      bg: "bg-amber-500/10 border-amber-500/20",
-    },
     {
       label: "Total Time Logged",
       value: totalHours.toFixed(1),
