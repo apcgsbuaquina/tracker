@@ -62,7 +62,7 @@ body {
 
 .glass-panel {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.09);

@@ -146,9 +146,9 @@ export function intensityColor(
     return isDark ? "#18181b" : "#f1f5f9";
   }
   const { h, s } = hexToHsl(HEATMAP_PALETTE[bucket - 1]);
-  const lightnessMap = isDark
-    ? { 1: 20, 2: 32, 3: 46, 4: 58 }
-    : { 1: 60, 2: 54, 3: 48, 4: 42 };
+  // Keep the four activity colors consistent across themes. Dark mode
+  // changes the surrounding UI, not the meaning of the heatmap colors.
+  const lightnessMap = { 1: 60, 2: 54, 3: 48, 4: 42 };
   const saturation = Math.min(s + 5, 100);
   return `hsl(${h}, ${saturation}%, ${lightnessMap[bucket]}%)`;
 }

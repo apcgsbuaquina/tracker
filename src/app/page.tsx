@@ -224,14 +224,14 @@ export default function DashboardPage() {
       <main className="flex h-[calc(100vh-4rem)] max-w-6xl mx-auto flex-col overflow-y-clip px-4 sm:px-6 py-6 sm:py-8 space-y-4">
         <div className="flex flex-1 flex-col justify-center gap-4">
         {/* Top Control Bar */}
-        <div className="relative z-10 -translate-y-7 flex flex-col lg:flex-row lg:items-end justify-end gap-6">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 lg:flex-nowrap lg:max-w-none lg:justify-end">
+        <div className="relative z-10 -translate-y-7 flex min-w-0 flex-col lg:flex-row lg:items-end justify-end gap-6">
+          <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-2.5 lg:flex-nowrap lg:max-w-none">
             {/* Filter Dropdown */}
-            <div className="relative">
+            <div className="relative min-w-0 max-w-full sm:flex-none">
               <select
                 value={filterTaskId}
                 onChange={(e) => setFilterTaskId(e.target.value)}
-                className="appearance-none pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40 cursor-pointer shadow-xs transition-colors"
+                className="w-full max-w-full appearance-none truncate pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40 cursor-pointer shadow-xs transition-colors sm:w-auto"
               >
                 <option value="all">All Habits Combined</option>
                 {activeTasks.map((t) => (
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                 title="Customize shade intensity thresholds"
               >
                 <Sliders className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="hidden sm:inline">Color Scale</span>
+                <span className="hidden md:inline">Color Scale</span>
               </button>
             )}
 
@@ -262,7 +262,7 @@ export default function DashboardPage() {
               title="Export CSV history"
             >
               <Download className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden md:inline">Export</span>
             </button>
 
             {/* Log Today Button */}
@@ -286,9 +286,9 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="relative -translate-y-7 flex flex-col justify-start">
+            <div className="relative z-20 -translate-y-7 flex flex-col justify-start">
             {/* Heatmap Card */}
-            <div className="glass-panel grain-surface rounded-2xl overflow-visible">
+            <div className="glass-panel grain-surface relative z-20 rounded-2xl overflow-visible">
               <div className="p-5 sm:p-6 pb-0">
                 <div className="flex items-center justify-between mb-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                 <div className="flex items-center gap-2 min-w-0 flex-wrap">

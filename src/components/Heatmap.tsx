@@ -353,9 +353,7 @@ function colorDistance(
 
 function intensityLightness(bucket: 0 | 1 | 2 | 3 | 4, isDark: boolean): number {
   if (bucket === 0) return isDark ? 9 : 95;
-  return isDark
-    ? ({ 1: 20, 2: 32, 3: 46, 4: 58 } as const)[bucket]
-    : ({ 1: 60, 2: 54, 3: 48, 4: 42 } as const)[bucket];
+  return ({ 1: 60, 2: 54, 3: 48, 4: 42 } as const)[bucket];
 }
 
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
