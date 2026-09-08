@@ -42,7 +42,8 @@ body {
   mix-blend-mode: multiply;
 }
 
-.grain-page > * {
+.grain-page > header,
+.grain-page > main {
   position: relative;
   z-index: 1;
 }
