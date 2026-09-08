@@ -286,7 +286,7 @@ export default function DayEntryModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
@@ -310,7 +310,7 @@ export default function DayEntryModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-400">
-              <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-700 dark:border-zinc-700 dark:border-t-zinc-300 rounded-full animate-spin" />
               <span className="text-xs">Loading day data...</span>
             </div>
           ) : activeTasks.length === 0 ? (
@@ -339,7 +339,7 @@ export default function DayEntryModal({
                     isMarkedDelete
                       ? "border-rose-300 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 opacity-75"
                       : boolActive || timeActive
-                      ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10"
+                      ? "border-zinc-500/30 bg-zinc-100/60 dark:bg-zinc-800/60"
                       : "border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-950/40"
                   }`}
                 >
@@ -367,7 +367,7 @@ export default function DayEntryModal({
                               Will Delete
                             </span>
                           ) : (boolActive || (draft.existing && !isBoolean && !isMarkedDelete)) ? (
-                            <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
                               Logged
                             </span>
                           ) : null}
@@ -390,7 +390,7 @@ export default function DayEntryModal({
                           <button
                             type="button"
                             onClick={() => toggleDeleteEntry(task.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-500 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                           >
                             <RotateCcw className="w-3 h-3" />
                             <span>Undo</span>
@@ -401,7 +401,7 @@ export default function DayEntryModal({
                             onClick={() => toggleBooleanDone(task.id)}
                             className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer focus:outline-none ${
                               isDone
-                                ? "bg-emerald-500"
+                                ? "bg-zinc-700 dark:bg-zinc-300"
                                 : "bg-zinc-200 dark:bg-zinc-700"
                             }`}
                             aria-pressed={isDone}
@@ -420,7 +420,7 @@ export default function DayEntryModal({
                           <button
                             type="button"
                             onClick={() => toggleDeleteEntry(task.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-500 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                           >
                             <RotateCcw className="w-3 h-3" />
                             <span>Undo</span>
@@ -432,7 +432,7 @@ export default function DayEntryModal({
                                 key={inc}
                                 type="button"
                                 onClick={() => addQuickHours(task.id, inc)}
-                                className="px-2 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-emerald-500/50 hover:text-emerald-500 transition-colors cursor-pointer"
+                                className="px-2 py-1 rounded-md text-[11px] font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                               >
                                 +{inc}h
                               </button>
@@ -468,7 +468,7 @@ export default function DayEntryModal({
                             updateDraft(draft.taskId, "hours", e.target.value)
                           }
                           placeholder="0.0"
-                          className="w-full pl-7 pr-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40"
+                          className="w-full pl-7 pr-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40"
                         />
                         <Clock className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-2 pointer-events-none" />
                       </div>
@@ -482,7 +482,7 @@ export default function DayEntryModal({
                             updateDraft(draft.taskId, "note", e.target.value)
                           }
                           placeholder="Optional note / reflection..."
-                          className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40"
+                          className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40"
                         />
                         <FileText className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-2 pointer-events-none" />
                       </div>
@@ -500,7 +500,7 @@ export default function DayEntryModal({
                           updateDraft(draft.taskId, "note", e.target.value)
                         }
                         placeholder="Optional note / reflection..."
-                        className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40"
+                        className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40"
                       />
                       <FileText className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-2 pointer-events-none" />
                     </div>
@@ -565,7 +565,7 @@ export default function DayEntryModal({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>{saving ? "Saving..." : "Save Changes"}</span>

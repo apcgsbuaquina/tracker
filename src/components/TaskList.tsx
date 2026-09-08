@@ -66,10 +66,6 @@ export default function TaskList({
               {task.name}
             </span>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: task.color }}
-              />
               <span className="text-xs text-zinc-600 dark:text-zinc-400 capitalize">
                 {task.is_archived ? "Archived" : "Active Tracking"}
               </span>
@@ -85,7 +81,7 @@ export default function TaskList({
                   )}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
                   <Clock className="w-2.5 h-2.5" />
                   Time
                 </span>

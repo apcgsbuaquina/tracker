@@ -29,8 +29,8 @@ export default function StatsBar({
       value: totalHours.toFixed(1),
       unit: "hrs",
       icon: Clock,
-      color: "text-emerald-500 dark:text-emerald-400",
-      bg: "bg-emerald-500/10 border-emerald-500/20",
+      color: "text-zinc-700 dark:text-zinc-300",
+      bg: "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700",
     },
     {
       label: "Active Days",

@@ -58,7 +58,7 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
                       : "text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-emerald-500 stroke-[2.2]" : "text-zinc-400"}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-zinc-900 dark:text-zinc-100 stroke-[2.2]" : "text-zinc-400"}`} />
                   <span>{label}</span>
                 </Link>
               );
@@ -88,7 +88,7 @@ export default function Navbar({ onToggleDarkMode, isDark }: NavbarProps) {
           {/* User profile & sign out */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-100/80 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 max-w-[170px] sm:max-w-[220px]">
-              <div className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <div className="w-4 h-4 rounded-full bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
                 <User className="w-2.5 h-2.5" />
               </div>
               <span className="truncate">{email || "Account"}</span>

@@ -110,10 +110,10 @@ export default function TasksPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="p-1 rounded-md bg-emerald-500/10 text-emerald-500">
+              <span className="p-1 rounded-md bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                 <ListTodo className="w-4 h-4" />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                 Manage Habits
               </span>
             </div>
@@ -130,7 +130,7 @@ export default function TasksPage() {
               setEditingTask(null);
               setShowForm(true);
             }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 text-xs font-semibold shadow-sm transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-xs font-semibold shadow-sm transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>New Habit</span>
@@ -140,7 +140,7 @@ export default function TasksPage() {
         {/* List Content */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-zinc-400">
-            <div className="w-7 h-7 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+            <div className="w-7 h-7 border-2 border-zinc-300 border-t-zinc-700 dark:border-zinc-700 dark:border-t-zinc-300 rounded-full animate-spin" />
             <span className="text-xs font-medium">Loading habits...</span>
           </div>
         ) : (

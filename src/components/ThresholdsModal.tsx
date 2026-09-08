@@ -125,7 +125,7 @@ export default function ThresholdsModal({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
               <Sliders className="w-4 h-4" />
             </div>
             <div>
@@ -154,7 +154,7 @@ export default function ThresholdsModal({
             <select
               value={selectedTask}
               onChange={(e) => handleSelectTask(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-emerald-500"
+              className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-zinc-500"
             >
               <option value="all">All Habits (Default)</option>
               {tasks
@@ -178,7 +178,7 @@ export default function ThresholdsModal({
                   key={p.label}
                   type="button"
                   onClick={() => applyPreset(p.values)}
-                  className="px-2.5 py-1 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500/50 hover:text-emerald-500 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                 >
                   {p.label}
                 </button>
@@ -232,7 +232,7 @@ export default function ThresholdsModal({
                 step="0.25"
                 value={t1}
                 onChange={(e) => setT1(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-emerald-500"
+                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-zinc-500"
               />
             </div>
             <div>
@@ -245,7 +245,7 @@ export default function ThresholdsModal({
                 step="0.25"
                 value={t2}
                 onChange={(e) => setT2(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-emerald-500"
+                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-zinc-500"
               />
             </div>
             <div>
@@ -258,7 +258,7 @@ export default function ThresholdsModal({
                 step="0.25"
                 value={t3}
                 onChange={(e) => setT3(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-emerald-500"
+                className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1.5 focus:ring-zinc-500"
               />
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function ThresholdsModal({
             <button
               type="button"
               onClick={handleSave}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 shadow-sm transition-all cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 shadow-sm transition-all cursor-pointer"
             >
               <Check className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Save Thresholds</span>

@@ -7,6 +7,8 @@ import {
   parseDate,
   bucketValue,
   intensityColor,
+  hexToHsl,
+  HEATMAP_PALETTE,
   DAY_LABELS,
   MONTH_LABELS,
   formatDate,
@@ -25,6 +27,8 @@ interface HeatmapProps {
   isDark: boolean;
   thresholds?: Thresholds;
   onOpenThresholds?: () => void;
+  isCombined?: boolean;
+  isBooleanTask?: boolean;
 }
 
 const CELL_SIZE = 14;
@@ -39,6 +43,8 @@ export default function Heatmap({
   isDark,
   thresholds = DEFAULT_THRESHOLDS,
   onOpenThresholds,
+  isCombined = false,
+  isBooleanTask = false,
 }: HeatmapProps) {
   const [tooltip, setTooltip] = useState<{
     date: string;
@@ -177,7 +183,13 @@ export default function Heatmap({
                   const dayData = data.get(dateStr);
                   const value = dayData?.totalHours ?? 0;
                   const bucket = bucketValue(value, thresholds);
-                  const color = intensityColor(bucket, baseColor, isDark);
+                  const color = isCombined
+                    ? combinedDayColor(dayData, thresholds, isDark)
+                    : isBooleanTask
+                    ? value > 0
+                      ? "#43A047"
+                      : intensityColor(0, baseColor, isDark)
+                    : intensityColor(bucket, baseColor, isDark);
                   const isToday = dateStr === today;
 
                   return (
@@ -189,13 +201,13 @@ export default function Heatmap({
                           : "border border-transparent hover:scale-125 hover:z-20 hover:shadow-md"
                       } ${
                         isToday
-                          ? "ring-2 ring-emerald-500 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
+                          ? "ring-2 ring-zinc-700 dark:ring-zinc-300 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
                           : ""
                       }`}
                       style={{
                         width: CELL_SIZE,
                         height: CELL_SIZE,
-                        backgroundColor: color,
+                        background: color,
                       }}
                       onClick={() => onDayClick(dateStr)}
                       onMouseEnter={(e) => handleMouseEnter(dateStr, e)}
@@ -226,7 +238,7 @@ export default function Heatmap({
           Click on any square to view, log, edit, or delete hours
         </span>
 
-        <div className="flex items-center gap-3">
+        {!isBooleanTask && <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">0h</span>
             {([0, 1, 2, 3, 4] as const).map((bucket) => (
@@ -269,10 +281,73 @@ export default function Heatmap({
               <span>Customize Scale</span>
             </button>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
+}
+
+function combinedDayColor(
+  dayData: DayData | undefined,
+  thresholds: Thresholds,
+  isDark: boolean
+): string {
+  if (!dayData || dayData.totalHours <= 0) {
+    return intensityColor(0, "#10b981", isDark);
+  }
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  for (const entry of dayData.breakdown) {
+    const weight = entry.hours / dayData.totalHours;
+    const { h, s } = hexToHsl(
+      HEATMAP_PALETTE[bucketValue(entry.hours, thresholds) - 1]
+    );
+    const lightness = intensityLightness(
+      bucketValue(entry.hours, thresholds),
+      isDark
+    );
+    const [entryRed, entryGreen, entryBlue] = hslToRgb(h, s, lightness);
+    red += entryRed * weight;
+    green += entryGreen * weight;
+    blue += entryBlue * weight;
+  }
+
+  return `rgb(${Math.round(red)}, ${Math.round(green)}, ${Math.round(blue)})`;
+}
+
+function intensityLightness(bucket: 0 | 1 | 2 | 3 | 4, isDark: boolean): number {
+  if (bucket === 0) return isDark ? 9 : 95;
+  return isDark
+    ? ({ 1: 20, 2: 32, 3: 46, 4: 58 } as const)[bucket]
+    : ({ 1: 60, 2: 54, 3: 48, 4: 42 } as const)[bucket];
+}
+
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const saturation = s / 100;
+  const lightness = l / 100;
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const segment = h / 60;
+  const intermediate = chroma * (1 - Math.abs((segment % 2) - 1));
+  const match = lightness - chroma / 2;
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (segment < 1) [red, green, blue] = [chroma, intermediate, 0];
+  else if (segment < 2) [red, green, blue] = [intermediate, chroma, 0];
+  else if (segment < 3) [red, green, blue] = [0, chroma, intermediate];
+  else if (segment < 4) [red, green, blue] = [0, intermediate, chroma];
+  else if (segment < 5) [red, green, blue] = [intermediate, 0, chroma];
+  else [red, green, blue] = [chroma, 0, intermediate];
+
+  return [
+    (red + match) * 255,
+    (green + match) * 255,
+    (blue + match) * 255,
+  ];
 }
 
 function Tooltip({
@@ -324,7 +399,7 @@ function Tooltip({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-zinc-600 dark:text-zinc-400">Total Tracked</span>
-              <span className="font-bold text-emerald-500">
+              <span className="font-bold text-zinc-700 dark:text-zinc-300">
                 {total.toFixed(1)} hrs
               </span>
             </div>

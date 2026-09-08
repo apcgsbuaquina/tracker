@@ -141,7 +141,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Deep Work, Workout, Reading"
-                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-500/30 focus:border-zinc-500 transition-all"
                   autoFocus
                 />
               </div>
@@ -157,14 +157,14 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
                     onClick={() => setTaskType("time")}
                     className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       taskType === "time"
-                        ? "border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10"
+                        ? "border-zinc-500 bg-zinc-100 dark:bg-zinc-800"
                         : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                   >
                     <div
                       className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                         taskType === "time"
-                          ? "bg-emerald-500/15 text-emerald-500"
+                          ? "bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
                           : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
                       }`}
                     >
@@ -174,7 +174,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
                       <p
                         className={`text-xs font-semibold ${
                           taskType === "time"
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-zinc-800 dark:text-zinc-200"
                             : "text-zinc-700 dark:text-zinc-300"
                         }`}
                       >
@@ -185,7 +185,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
                       </p>
                     </div>
                     {taskType === "time" && (
-                      <Check className="w-3.5 h-3.5 text-emerald-500 ml-auto shrink-0 stroke-[2.5]" />
+                      <Check className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 ml-auto shrink-0 stroke-[2.5]" />
                     )}
                   </button>
 
@@ -352,7 +352,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
                         className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                           taskType === "boolean"
                             ? "bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20"
-                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700"
                         }`}
                       >
                         {taskType === "boolean"
@@ -435,7 +435,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
             <button
               type="submit"
               disabled={saving || !name.trim()}
-              className="flex-1 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 text-xs font-semibold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+              className="flex-1 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-xs font-semibold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
             >
               {saving ? "Saving..." : task ? "Update Habit" : "Create Habit"}
             </button>

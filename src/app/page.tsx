@@ -65,6 +65,10 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const activeTasks = tasks.filter((t) => !t.is_archived);
+  const selectedTask = tasks.find((task) => task.id === filterTaskId);
+  const isBooleanTask = selectedTask?.task_type === "boolean";
+
   function toggleDarkMode() {
     toggleTheme(isDark, setIsDark);
   }
@@ -184,10 +188,9 @@ export default function DashboardPage() {
 
   // Determine heatmap active color
   const heatmapColor = useMemo(() => {
-    if (filterTaskId === "all") return "#10b981";
-    const task = tasks.find((t) => t.id === filterTaskId);
-    return task?.color ?? "#10b981";
-  }, [filterTaskId, tasks]);
+    if (isBooleanTask) return "#43A047";
+    return "#f97316";
+  }, [isBooleanTask]);
 
   // CSV export
   function exportCsv() {
@@ -217,8 +220,6 @@ export default function DashboardPage() {
     URL.revokeObjectURL(url);
   }
 
-  const activeTasks = tasks.filter((t) => !t.is_archived);
-
   return (
     <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Navbar onToggleDarkMode={toggleDarkMode} isDark={isDark} />
@@ -241,7 +242,7 @@ export default function DashboardPage() {
               <select
                 value={filterTaskId}
                 onChange={(e) => setFilterTaskId(e.target.value)}
-                className="appearance-none pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-emerald-500/40 cursor-pointer shadow-xs transition-colors"
+                className="appearance-none pl-8 pr-8 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:ring-1.5 focus:ring-zinc-500/40 cursor-pointer shadow-xs transition-colors"
               >
                 <option value="all">All Habits Combined</option>
                 {activeTasks.map((t) => (
@@ -254,14 +255,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Customize Scale Button */}
-            <button
-              onClick={() => setShowThresholdsModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-xs cursor-pointer"
-              title="Customize shade intensity thresholds"
-            >
-              <Sliders className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">Color Scale</span>
-            </button>
+            {!isBooleanTask && (
+              <button
+                onClick={() => setShowThresholdsModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-xs cursor-pointer"
+                title="Customize shade intensity thresholds"
+              >
+                <Sliders className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="hidden sm:inline">Color Scale</span>
+              </button>
+            )}
 
             {/* CSV Export Button */}
             <button
@@ -276,7 +279,7 @@ export default function DashboardPage() {
             {/* Log Today Button */}
             <button
               onClick={() => setSelectedDate(formatDate(new Date()))}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 shadow-sm transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Log Today</span>
@@ -289,7 +292,7 @@ export default function DashboardPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-zinc-400">
-            <div className="w-7 h-7 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+            <div className="w-7 h-7 border-2 border-zinc-300 border-t-zinc-700 dark:border-zinc-700 dark:border-t-zinc-300 rounded-full animate-spin" />
             <span className="text-xs font-medium">Synchronizing habits...</span>
           </div>
         ) : (
@@ -306,10 +309,6 @@ export default function DashboardPage() {
             <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-5 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: heatmapColor }}
-                  />
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     {filterTaskId === "all"
                       ? "Combined Activity"
@@ -336,7 +335,11 @@ export default function DashboardPage() {
                 onDayClick={setSelectedDate}
                 isDark={isDark}
                 thresholds={activeThresholds}
-                onOpenThresholds={() => setShowThresholdsModal(true)}
+                onOpenThresholds={
+                  isBooleanTask ? undefined : () => setShowThresholdsModal(true)
+                }
+                isCombined={filterTaskId === "all"}
+                isBooleanTask={isBooleanTask}
               />
             </div>
           </>
